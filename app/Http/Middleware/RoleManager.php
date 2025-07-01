@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use Illuminate\Support\Facades\Auth;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Illuminate\Support\Facades\Auth;
 
 class RoleManager
 {
@@ -16,28 +16,42 @@ class RoleManager
      */
     public function handle(Request $request, Closure $next, $role): Response
     {
-        if (!Auth::check()) {
-            return redirect()->route('login');
+        if(!Auth::check()){
+            return redirect()->route('login');    
         }
 
         $authUserRole = Auth::user()->role;
 
-        $roleMap = [
-            'admin' => 0,
-            'worker' => 1,
-            'employer' => 2,
-        ];
+            switch($role){
+                case 'admin':
+                    if($authUserRole == 0){
+                       return $next($request);
+                    }
+                    break;
+                case 'worker':
+                    if($authUserRole == 1){
+                       return $next($request);
+                    }
+                    break;
+                case 'employer':
+                    if($authUserRole == 2){
+                        return $next($request);
+                    }
+                    break;
+            }
 
-        if (isset($roleMap[$role]) && $authUserRole == $roleMap[$role]) {
-            return $next($request);
-        }
+            switch($authUserRole){
+                case 0:
+                    return redirect()->route('admin');
+                case 1:
+                    return redirect()->route('worker');
+                case 2:
+                    return redirect()->route('employer');
+                default:
+                    return redirect()->route('dashboard');//not so sure
+            }
 
-        // Redirect to correct dashboard if user tries to access a page for the wrong role
-        return match ($authUserRole) {
-            0 => redirect()->route('admin'),
-            1 => redirect()->route('worker'),
-            2 => redirect()->route('employer'),
-            default => redirect()->route('dashboard'),
-        };
+            //return redirect()->route('login');//
+
     }
 }
