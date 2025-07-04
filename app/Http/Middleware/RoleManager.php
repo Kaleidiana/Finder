@@ -16,42 +16,43 @@ class RoleManager
      */
     public function handle(Request $request, Closure $next, $role): Response
     {
-        if(!Auth::check()){
+        // 🧪 Debug: Confirm middleware is triggered
+        dd("RoleManager middleware is running. Requested role: $role | Auth role: " . (Auth::check() ? Auth::user()->role : 'guest'));
+
+        if (!Auth::check()) {
             return redirect()->route('login');    
         }
 
         $authUserRole = Auth::user()->role;
 
-            switch($role){
-                case 'admin':
-                    if($authUserRole == 0){
-                       return $next($request);
-                    }
-                    break;
-                case 'worker':
-                    if($authUserRole == 1){
-                       return $next($request);
-                    }
-                    break;
-                case 'employer':
-                    if($authUserRole == 2){
-                        return $next($request);
-                    }
-                    break;
-            }
+        switch($role){
+            case 'admin':
+                if ($authUserRole == 0) {
+                    return $next($request);
+                }
+                break;
+            case 'worker':
+                if ($authUserRole == 1) {
+                    return $next($request);
+                }
+                break;
+            case 'employer':
+                if ($authUserRole == 2) {
+                    return $next($request);
+                }
+                break;
+        }
 
-            switch($authUserRole){
-                case 0:
-                    return redirect()->route('admin');
-                case 1:
-                    return redirect()->route('worker');
-                case 2:
-                    return redirect()->route('employer');
-                default:
-                    return redirect()->route('dashboard');//not so sure
-            }
-
-            //return redirect()->route('login');//
-
+        // Redirect to the proper dashboard
+        switch($authUserRole){
+            case 0:
+                return redirect()->route('admin');
+            case 1:
+                return redirect()->route('worker');
+            case 2:
+                return redirect()->route('employer');
+            default:
+                return redirect()->route('dashboard');
+        }
     }
 }
